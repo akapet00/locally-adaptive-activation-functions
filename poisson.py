@@ -86,7 +86,7 @@ def parse_arguments():
     parser.add_argument('--adaptive_rate',
         type=float, help='Add additional adaptive rate parameter to activation function')
     parser.add_argument('--adaptive_rate_scaler',
-        type=float, help='Scale variable adaptive rate')
+        type=float, help='Apply constant scaler to the adaptive rate')
     args = parser.parse_args()
     return args
 
@@ -273,7 +273,6 @@ def train(
         Loss values during training process
     """
     net = Net(sizes, activation, dropout_rate, adaptive_rate, adaptive_rate_scaler).to(device=device)
-
     optimizer = optimizer_dispatcher(optimizer, net.parameters(), learning_rate)
     loss_list = []
     logging.info(f'{net}\n')
@@ -300,7 +299,13 @@ def train(
             boundaries.requires_grad = True
             boundary_residual = net(boundaries) - torch.tensor(boundary_conditions, device=device).unsqueeze(-1)
 
-            loss = (torch.mean(domain_residual ** 2) + torch.mean(boundary_residual ** 2))
+            if adaptive_rate:
+                local_recovery_terms = torch.tensor([torch.exp(torch.mean(net.regressor[layer][0].A.data)) for layer in range(len(net.regressor) - 1)])
+                slope_recovery_term = 1 / torch.mean(local_recovery_terms)
+                loss = (torch.mean(domain_residual ** 2) + torch.mean(boundary_residual ** 2)) + slope_recovery_term
+            else:
+                loss = (torch.mean(domain_residual ** 2) + torch.mean(boundary_residual ** 2))
+            
             loss_list.append(loss)
             optimizer.zero_grad()
             loss.backward()
@@ -381,9 +386,9 @@ def main():
     args = parse_arguments()
     if args.cuda:
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        logging.info(f'Device: {device}\n')
     else:
         device = torch.device('cpu')
+    logging.info(f'Device: {device}\n')
     rhs = lambda x: torch.tensor([args.rhs], device=device)
     domain = args.domain
     boundary_conditions = args.boundary_conditions
