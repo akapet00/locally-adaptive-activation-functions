@@ -50,7 +50,7 @@ To run this code you need the following:
     ``` 
 * instead, if you have a CUDA GPU, you want to install PyTorch supporting cudatoolkit manually. E.g., using `conda` installer, run the following command:
     ```shell
-    $ conda install pytorch torchvision torchaudio cudatoolkit=11.0 -c pytorch
+    $ conda install pytorch cudatoolkit=11.0 -c pytorch
     ```
     for the latest supported cudatoolkit using Python3. 
     
@@ -71,6 +71,7 @@ usage: poisson.py [-h] [--cuda] [--domain DOMAIN DOMAIN]
                   [--dropout_rate DROPOUT_RATE] [--apply_mcdropout]
                   [--adaptive_rate ADAPTIVE_RATE]
                   [--adaptive_rate_scaler ADAPTIVE_RATE_SCALER]
+                  [--save_fig SAVE_FIG]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -99,5 +100,44 @@ optional arguments:
                         Add additional adaptive rate parameter to activation
                         function
   --adaptive_rate_scaler ADAPTIVE_RATE_SCALER
-                        Scale variable adaptive rate
+                        Apply constant scaler to the adaptive rate
+  --save_fig SAVE_FIG   Save figure with specified name
 ```
+
+### Experiment 1
+PINN with an input layer, $3$ hidden layers with $50$ units per each hidden layer, and an output layer. Optimization is performed using stochastic gradient descent algorithm with momentum using a learning rate of $0.001$.
+```shell
+$ python poisson.py --cuda --domain -1 1 --boundary_conditions -1 3 --rhs -7 --n_layers 3 --n_units 100 --activation tanh --optimizer sgd --n_epochs 1000 --batch_size 32 --linspace --learning_rate 1e-3 --save_fig experiment_1
+```
+![experiment_1](figs/experiment_1.png)
+
+### Experiment 2
+Unlike the previous experiment, here the batch contains $101$ data points randomly spaced over the solution domain.
+For this experiment ADAM optimization is performed over $5000$ epochs.
+```shell
+$ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 50 --activation tanh --optimizer adam --n_epochs 5000 --batch_size 101 --learning_rate 1e-3 --save_fig experiment_2
+```
+![experiment_2](figs/experiment_2.png)
+
+### Experiment 3
+Repeating the previous experiment only instead using adaptive activation functions and slope-recovery term in loss function.
+```shell
+$ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 50 --activation tanh --optimizer adam --n_epochs 5000 --batch_size 101 --learning_rate 1e-3 --adaptive_rate 0.3 --save_fig experiment_3
+```
+![experiment_3](figs/experiment_3.png)
+
+### Experiment 4
+Uncertainty quantification using Monte Carlo dropout procedure.
+For details on the method check [the seminal paper](http://proceedings.mlr.press/v48/gal16.pdf) by Gal and Ghahramani.
+PINN with $3$ hidden layers and $100$ units per each hidden layer is used with the dropout rate of $0.01$ during both the train and evaluation.
+$95\%$ confidence interval is achieved by adding and subtracting $2$ standard deviations from expected value using samples on the output of the PINN.
+For this experiment, instead of gradient-based optimizers, L-BFGS-B optimizer is used.
+Since L-BFGS-B uses an automatically differentiated inverse Hessian matrix to steer its search through variable space, the adaptive activation functions are not necessary (check the paper).
+The number of epochs is lower considerably than in previous experiments.
+```shell
+$ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 100 --activation tanh --optimizer bfgs --n_epochs 100 --batch_size 101 --dropout_rate 0.01 --apply_mcdropout --save_fig experiment_4 
+```
+![experiment_3](figs/experiment_4.png)
+
+## Author
+© [Ante Lojic Kapetanovic](http://adria.fesb.hr/~alojic00/)
