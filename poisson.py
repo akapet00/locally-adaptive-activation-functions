@@ -1,8 +1,23 @@
+r"""Implementation of locally adaptive activation functions (LAAFs)
+with slope recovery for deep and physics-informed neural networks
+(PINNs) in PyTorch.
+
+Original implementation of LAAFs in TensorFlow is open source and
+available on the first author's GitHub at:
+AmeyaJagtap/Locally-Adaptive-Activation-Functions-Neural-Networks-
+
+The LAAFs are introduced in the paper by Jagtap et al. available at:
+https://doi.org/10.1098/rspa.2020.0334
+
+Author: Ante Lojic Kapetanovic
+"""
+
 import argparse
 import datetime
 import logging
-from timeit import default_timer as timer
+import os
 import sys
+from timeit import default_timer as timer
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -87,6 +102,8 @@ def parse_arguments():
         type=float, help='Add additional adaptive rate parameter to activation function')
     parser.add_argument('--adaptive_rate_scaler',
         type=float, help='Apply constant scaler to the adaptive rate')
+    parser.add_argument('--save_fig',
+        type=str, help='Save figure with specified name')
     args = parser.parse_args()
     return args
 
@@ -319,7 +336,8 @@ def train(
 def eval_and_viz(
         device, domain, boundary_conditions, rhs,
         net, loss_list,
-        apply_mcdropout
+        apply_mcdropout,
+        save_fig
         ):
     r"""Evaluate and visualize.
 
@@ -341,6 +359,8 @@ def eval_and_viz(
     apply_mcdropout : bool
         Apply Monte Carlo dropout for uncertainty quantification if set
         to `True`
+    save_fig : bool
+        Save figure
 
     Returns
     -------
@@ -364,7 +384,7 @@ def eval_and_viz(
     y = solve_poisson(x, rhs, boundary_conditions)
     rmse_val = np.sqrt(np.mean((y - y_pred)**2))
 
-    _, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
     ax[0].plot(x, y, 'k-', linewidth=2, label='Analytic solution')
     ax[0].plot(x, y_pred, 'r--', dashes=(3, 4), linewidth=3, label='PINN solution')
     if apply_mcdropout:
@@ -379,7 +399,9 @@ def eval_and_viz(
     ax[1].set_ylabel('loss value')
     plt.tight_layout()
     plt.show()
-
+    if save_fig:
+        fig.savefig(os.path.join('figs', f'{save_fig}.png'), format='png', bbox_inches='tight', dpi=200)
+    
 
 def main():
     torch.set_default_dtype(torch.float32)
@@ -405,6 +427,7 @@ def main():
     apply_mcdropout = args.apply_mcdropout
     adaptive_rate = args.adaptive_rate
     adaptive_rate_scaler = args.adaptive_rate_scaler
+    save_fig = args.save_fig
 
     # trainining process
     net, loss_list = train(
@@ -418,7 +441,8 @@ def main():
     eval_and_viz(
         device, domain, boundary_conditions, rhs,
         net, loss_list,
-        apply_mcdropout
+        apply_mcdropout,
+        save_fig
         )
 
 
