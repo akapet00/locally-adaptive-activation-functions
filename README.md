@@ -21,18 +21,21 @@ We propose two approaches of locally adaptive activation functions namely, layer
 ```
 
 ## About this repository
-This repository containts a simplified version of the neuron-wise locally adaptive activation functions (N-LAAF) applied to physics-informed neural networks (PINNs) to solve a toy example of 1-D Poisson equation with scalar right-hand-side function on aribtrary domain with arbitrary Dircihlet boundary conditions.
+This repository contains a simplified version of the neuron-wise locally adaptive activation functions (N-LAAF) applied to physics-informed neural networks (PINNs) to solve 1-D Poisson equation with scalar right-hand-side function on aribtrary domain with arbitrary Dircihlet boundary conditions as a toy example.
 
-PINNs are relatively new concept and a very efficient method for solving forward and inverse differential and integro-differential equations involving noisy, sparse and multi-fidelity data.
+PINNs are relatively new concept and a very efficient method for solving forward and inverse (partial) differential and integro-differential equations involving noisy, sparse and multi-fidelity data.
 The main feature of PINNs is that they incorporate all
-prior information on the underlying dynamics of the governing equation to be numerically solved, experimental data, initial/boundary conditions, etc., into the loss function thereby recast the original problem into an optimization problem.
+prior information on the underlying dynamics of the governing equation, experimental/measured data, initial/boundary conditions, etc., into the loss function thereby recast the original problem into an optimization problem.
 Mathematical details of PINNs are available in [the seminal 2019 paper](https://www.sciencedirect.com/science/article/pii/S0021999118307125) by Raissi et al. 
 
-The idea behind locally adaptive activation functions for PINNs is introduced in its infant version in [the paper](https://www.sciencedirect.com/science/article/pii/S0021999119308411?via%3Dihub) by Jagtap et al., where authors of this paper introduce a scalable parameter in an activation function, which can be optimized by using any optimization algorithm. Mathematically, the adaptive scalabale parameter affects the slope of activation functions, thus increasing the learning process by altering the loss landscape of the neural network, especially during the initial training period. Since this approach uses only a single learnable paramater, such activation functions are known as globally adaptive activation functions (GAAFs).
+The key idea behind *adaptive activation functions* for PINNs is introduced in its infant version in [the paper](https://www.sciencedirect.com/science/article/pii/S0021999119308411?via%3Dihub) by Jagtap et al., where authors introduce a scalable parameter in an activation function, which can be optimized by using any optimization algorithm.
+Mathematically, the adaptive scalabale parameter affects the slope of activation functions, thus increasing the learning process by altering the loss landscape of the neural network, especially during the initial training period.
+Since this approach uses only a single learnable paramater, such activation functions are known as *globally adaptive activation functions* (GAAFs).
 
-Authors of the paper implemented in this repository introduce the idea of multiple scalable parameters applied layer-wise or even neuron-wise.
-Such locally defined activation slopes are able to further improve the performance of the network but at the same time the parameter space grows larger. Even though, the parameter space is considerably larger compared to the fixed activation function (additional $D-1$ parameters to be optimized along with weights and biases for layer-wise and additional $\sum_{k=1}^{D-1}N_k$ parameters for neuron-wise procedure, where $D$ is the number of hidden layers and $N$ is the number of neurons per $k$-th hidden layer), the overall computational cost is comparable.
-For details on layer-wise locally adaptive functions (L-LAAFs) and neuron-wise locally adaptive functions (N-LAAFs), check [the paper](https://royalsocietypublishing.org/doi/10.1098/rspa.2020.0334), especially Section 2 of the paper.
+The same authors introduce the idea of multiple scalable parameters applied layer-wise or even neuron-wise where such locally defined activation slopes are able to further improve the performance of the network but at the same time the parameter space grows larger.
+Even though the parameter space is considerably larger compared to the fixed activation function (additional $D-1$ parameters to be optimized along with weights and biases applied layer-wise, and additional $\sum_{k=1}^{D-1}N_k$ parameters applied neuron-wise, where $D$ is the number of hidden layers and $N$ is the number of neurons per $k$-th hidden layer), the overall computational cost is comparable.
+For details on *layer-wise locally adaptive functions* (L-LAAFs) and *neuron-wise locally adaptive functions* (N-LAAFs), check [the paper](https://royalsocietypublishing.org/doi/10.1098/rspa.2020.0334), especially Section 2 of the paper.
+Furthermore by increasing the slope of activation functions, problems such as vanishing gradients are avoidable by including the slope recovery term into the loss function itself, therby achieveing faster training of the network.
 
 ## Setup
 To run this code you need the following:
@@ -40,7 +43,7 @@ To run this code you need the following:
     ```shell
     $ git clone https://github.com/antelk/locally-adaptive-activation-functions.git
     ```
-    and enter the local repository
+    and enter the local repository:
     ```shell
     $ cd locally-adaptive-activation-functions
     ```
@@ -56,10 +59,11 @@ To run this code you need the following:
     
     `Python3.9` users will need to add ```-c=conda-forge``` flag, for details go to [the official installation webpage](https://pytorch.org/).
 
-The code is tested for both Windows 10 and GNU/Linux operating systems. Unfortunatelly, there are no unit tests that support the previous claim :)
+The code is tested for both Windows 10 and GNU/Linux operating systems. Unfortunatelly, there are no unit tests that support the previous claim :D
 
 ## Run the experiments
-`poisson.py` is the main (and the only) available script to run the experiments. The following is all arguments that could be passed into the scritp:
+`poisson.py` is the main (and the only) script to run the experiments.
+Arguments that could be passed into the script are listed as follows:
 ```shell
 $ python poisson.py --help
 usage: poisson.py [-h] [--cuda] [--domain DOMAIN DOMAIN]
@@ -113,14 +117,14 @@ $ python poisson.py --cuda --domain -1 1 --boundary_conditions -1 3 --rhs -7 --n
 
 ### Experiment 2
 Unlike the previous experiment, here the batch contains $101$ data points randomly spaced over the solution domain.
-For this experiment ADAM optimization is performed over $5000$ epochs.
+For this experiment, ADAM optimization is performed over $5000$ epochs.
 ```shell
 $ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 50 --activation tanh --optimizer adam --n_epochs 5000 --batch_size 101 --learning_rate 1e-3 --save_fig experiment_2
 ```
 ![experiment_2](figs/experiment_2.png)
 
 ### Experiment 3
-Repeating the previous experiment only instead using adaptive activation functions and slope-recovery term in loss function.
+Repeating the previous experiment only instead by applying adaptive activation functions and slope-recovery term into the loss function.
 ```shell
 $ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 50 --activation tanh --optimizer adam --n_epochs 5000 --batch_size 101 --learning_rate 1e-3 --adaptive_rate 0.3 --save_fig experiment_3
 ```
@@ -129,10 +133,10 @@ $ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n
 ### Experiment 4
 Uncertainty quantification using Monte Carlo dropout procedure.
 For details on the method check [the seminal paper](http://proceedings.mlr.press/v48/gal16.pdf) by Gal and Ghahramani.
-PINN with $3$ hidden layers and $100$ units per each hidden layer is used with the dropout rate of $0.01$ during both the train and evaluation.
-$95\%$ confidence interval is achieved by adding and subtracting $2$ standard deviations from expected value using samples on the output of the PINN.
+PINN with $3$ hidden layers and $100$ units per each hidden layer is used with the dropout rate of $0.01$ during both the training and testing time.
+$95\%$ confidence interval is achieved by adding and subtracting $2$ standard deviations from the expected value from $1000$ evaluated samples on the output of the PINN.
 For this experiment, instead of gradient-based optimizers, L-BFGS-B optimizer is used.
-Since L-BFGS-B uses an automatically differentiated inverse Hessian matrix to steer its search through variable space, the adaptive activation functions are not necessary (check the paper).
+Since L-BFGS-B uses an automatically differentiated inverse Hessian matrix to steer its search through parameter space, the adaptive activation functions are not necessary (check the paper).
 The number of epochs is lower considerably than in previous experiments.
 ```shell
 $ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 100 --activation tanh --optimizer bfgs --n_epochs 100 --batch_size 101 --dropout_rate 0.01 --apply_mcdropout --save_fig experiment_4 
