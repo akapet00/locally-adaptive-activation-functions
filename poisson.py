@@ -230,9 +230,9 @@ class Net(nn.Module):
             ['sigmoid', nn.Sigmoid()],
         ])
         return nn.Sequential(
-                AdaptiveLinear(in_features, out_features, adaptive_rate=adaptive_rate, adaptive_rate_scaler=adaptive_rate_scaler),
-                activation_dispatcher[activation],
-                nn.Dropout(dropout_rate),
+            AdaptiveLinear(in_features, out_features, adaptive_rate=adaptive_rate, adaptive_rate_scaler=adaptive_rate_scaler),
+            activation_dispatcher[activation],
+            nn.Dropout(dropout_rate),
             )
 
 
@@ -317,12 +317,11 @@ def train(
             boundary_residual = net(boundaries) - torch.tensor(boundary_conditions, device=device).unsqueeze(-1)
 
             if adaptive_rate:
-                local_recovery_terms = torch.tensor([torch.exp(torch.mean(net.regressor[layer][0].A.data)) for layer in range(len(net.regressor) - 1)])
-                slope_recovery_term = 1 / torch.mean(local_recovery_terms)
+                local_recovery_terms = torch.tensor([torch.mean(net.regressor[layer][0].A.data) for layer in range(len(net.regressor) - 1)])
+                slope_recovery_term = 1 / torch.mean(torch.exp(local_recovery_terms))
                 loss = (torch.mean(domain_residual ** 2) + torch.mean(boundary_residual ** 2)) + slope_recovery_term
             else:
                 loss = (torch.mean(domain_residual ** 2) + torch.mean(boundary_residual ** 2))
-            
             loss_list.append(loss)
             optimizer.zero_grad()
             loss.backward()
