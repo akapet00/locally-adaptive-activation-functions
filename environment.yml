@@ -1,13 +1,10 @@
 name: laaf
 channels:
-  - pytorch
   - defaults
+  - pytorch
 dependencies:
   - matplotlib=3.3.2
   - numpy=1.19.2
-  - pandas=1.2.0
   - python=3.8.5
   - pytorch=1.7.1=py3.8_cpu_0
-  - scikit-learn=0.23.2
-  - scipy=1.5.2
   - tqdm=4.54.1
