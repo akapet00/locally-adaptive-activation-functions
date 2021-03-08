@@ -62,11 +62,11 @@ To run this code you need the following:
 The code is tested for both Windows 10 and GNU/Linux operating systems. Unfortunatelly, there are no unit tests that support the previous claim :D
 
 ## Run the experiments
-`poisson.py` is the main (and the only) script to run the experiments.
+`poisson1d.py` is the main (and the only) script to run the experiments. `utils.py` holds the `AdaptiveLinear` class that implements the neural network layer with LAAFs.
 Arguments that could be passed into the script are listed as follows:
 ```shell
-$ python poisson.py --help
-usage: poisson.py [-h] [--cuda] [--domain DOMAIN DOMAIN]
+$ python poisson1d.py --help
+usage: poisson1d.py [-h] [--cuda] [--domain DOMAIN DOMAIN]
                   [--boundary_conditions BOUNDARY_CONDITIONS BOUNDARY_CONDITIONS]
                   [--rhs RHS] [--n_layers N_LAYERS] [--n_units N_UNITS]
                   [--activation ACTIVATION] [--optimizer {bfgs,sgd,adam}]
@@ -111,7 +111,7 @@ optional arguments:
 ### Experiment 1
 PINN with an input layer, $3$ hidden layers with $50$ units per each hidden layer, and an output layer. Optimization is performed using stochastic gradient descent algorithm with momentum using a learning rate of $0.001$.
 ```shell
-$ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -7 --n_layers 3 --n_units 100 --activation tanh --optimizer sgd --n_epochs 1000 --batch_size 32 --linspace --learning_rate 1e-3 --save_fig experiment_1
+$ python poisson1d.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -7 --n_layers 3 --n_units 100 --activation tanh --optimizer sgd --n_epochs 1000 --batch_size 32 --linspace --learning_rate 1e-3 --save_fig experiment_1
 ```
 ![experiment_1](figs/experiment_1.png)
 
@@ -119,14 +119,14 @@ $ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -7 --n_
 Unlike the previous experiment, here the batch contains $101$ data points randomly spaced over the solution domain.
 For this experiment, ADAM optimization is performed over $1000$ epochs.
 ```shell
-$ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 50 --activation tanh --optimizer adam --n_epochs 1000 --batch_size 101 --learning_rate 1e-3 --save_fig experiment_2
+$ python poisson1d.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 50 --activation tanh --optimizer adam --n_epochs 1000 --batch_size 101 --learning_rate 1e-3 --save_fig experiment_2
 ```
 ![experiment_2](figs/experiment_2.png)
 
 ### Experiment 3
 Repeating the previous experiment only instead by applying adaptive activation functions and slope-recovery term into the loss function.
 ```shell
-$ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 50 --activation tanh --optimizer adam --n_epochs 1000 --batch_size 101 --learning_rate 1e-3 --adaptive_rate 0.1 --adaptive_rate_scaler 10 --save_fig experiment_3
+$ python poisson1d.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 50 --activation tanh --optimizer adam --n_epochs 1000 --batch_size 101 --learning_rate 1e-3 --adaptive_rate 0.1 --adaptive_rate_scaler 10 --save_fig experiment_3
 ```
 ![experiment_3](figs/experiment_3.png)
 
@@ -139,7 +139,7 @@ For this experiment, instead of gradient-based optimizers, L-BFGS-B optimizer is
 Since L-BFGS-B uses an automatically differentiated inverse Hessian matrix to steer its search through parameter space, the adaptive activation functions are not necessary (check the paper).
 The number of epochs is lower considerably than in previous experiments.
 ```shell
-$ python poisson.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 100 --activation tanh --optimizer bfgs --n_epochs 50 --batch_size 32 --linspace --dropout_rate 0.01 --apply_mcdropout --save_fig experiment_4
+$ python poisson1d.py --cuda --domain 0 1 --boundary_conditions -1 3 --rhs -10 --n_layers 3 --n_units 100 --activation tanh --optimizer bfgs --n_epochs 50 --batch_size 32 --linspace --dropout_rate 0.01 --apply_mcdropout --save_fig experiment_4
 ```
 ![experiment_3](figs/experiment_4.png)
 
